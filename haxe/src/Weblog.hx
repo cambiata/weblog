@@ -105,9 +105,19 @@ class Weblog{
 			return;
 		}
 		send(_inspectable, "inspect");
-		haxe.Timer.delay(function():Void{
-			runInspect();
-		}, 100);
+		
+		#if neko
+			// neko haxe.Timer has no .delay() method...
+			neko.vm.Thread.create(function() {
+				Sys.sleep(100 / 1000);
+				runInspect();
+			});
+		#else		
+			haxe.Timer.delay(function():Void{
+				runInspect();
+			}, 100);
+		#end
+		
 	}
 	#end
 
