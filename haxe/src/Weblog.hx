@@ -1,6 +1,7 @@
 package ;
 
-#if openfl
+#if openfl	
+	import haxe.Timer;
 	import openfl.events.Event;
 	import openfl.net.URLLoader;
 	import openfl.net.URLRequest;
@@ -10,6 +11,16 @@ package ;
 	import openfl.Lib;
 	import openfl.system.System;
 #end 
+
+#if cpp
+	import cpp.vm.Thread;
+#end
+
+#if neko
+	import neko.vm.Thread;
+#end
+
+
 import haxe.Json;
 import haxe.macro.Compiler;
 
@@ -93,7 +104,6 @@ class Weblog{
 		send(data, "debug");
 	}
 	
-	#if (flash || js || java || openfl)
 	public static function inspect(data:Dynamic):Void {
 		_inspectable = data;
 		if(_isRunning) return;
@@ -106,9 +116,8 @@ class Weblog{
 		}
 		send(_inspectable, "inspect");
 		
-		#if neko
-			// neko haxe.Timer has no .delay() method...
-			neko.vm.Thread.create(function() {
+		#if (neko || cpp)
+			Thread.create(function() {
 				Sys.sleep(100 / 1000);
 				runInspect();
 			});
@@ -119,7 +128,6 @@ class Weblog{
 		#end
 		
 	}
-	#end
 
 	public static function test(data:Dynamic):Void {
 		send(data, "test");
@@ -141,9 +149,7 @@ class Weblog{
 						type: type,
 					});			
 				l.load(r);
-
-			#else
-
+			#else				
 				var r:haxe.Http = new haxe.Http("http://" + debugip);
 				r.addHeader("Accept" , "application/json");
 				r.setPostData( Json.stringify({
